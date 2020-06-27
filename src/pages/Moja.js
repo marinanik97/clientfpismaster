@@ -1,4 +1,4 @@
-import React, { useState, Component } from "react";
+import React, {useState, Component, Fragment} from "react";
 import "./style/CreateType.css";
 import MaterialTable from "material-table";
 import { TextField } from "@material-ui/core";
@@ -7,6 +7,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
 import { makeStyles } from "@material-ui/core/styles";
+import DrawerFP from "../components/DrawerFP";
 
 class Moja extends Component {
   state = {
@@ -15,6 +16,8 @@ class Moja extends Component {
   componentDidMount() {
     this.getTipovi();
   }
+
+
 
   async getTipovi() {
     await fetch("http://localhost:3000/tipovi")
@@ -31,7 +34,10 @@ class Moja extends Component {
   render() {
     var { uzorci } = this.state;
     return(
-    <div>{uzorci.map(this.renderUzorak)}</div>
+        <Fragment>
+          <DrawerFP/>
+          <div>{uzorci.map(this.renderUzorak)}</div>
+        </Fragment>
     );
   }
 }

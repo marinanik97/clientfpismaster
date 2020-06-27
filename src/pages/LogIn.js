@@ -1,32 +1,72 @@
 import React, { useState } from "react";
-import { Button } from "@material-ui/core";
+import { Button, TextField } from "@material-ui/core";
 import "./style/LogIn.css";
+import AuthContext from "../contexts/auth/AuthContext";
+import {Redirect} from "react-router-dom";
 
 const LogIn = () => {
+    const {getToken, setToken} = AuthContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState();
+  const [getRedirect, setRedirect] = useState();
+
+    if(getRedirect){
+        return <Redirect push to={getRedirect}/>
+    }
+
+    const LogIn = () => {
+      fetch('http://localhost:9000/login', {
+          method: 'POST',
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({email,password})})
+          .then(res => res.json())
+          .then(res => {
+              if(res && res.err){
+                  setError(res.err);
+              }else{
+                  setRedirect(`/home`)
+                  setToken(res.token);
+              }
+          })
+  }
+
+
 
   return (
     <div className="login">
-      <form className="form_login">
-        <input
+        <div className="login_container" style={{position: "relative"}}>
+        <TextField
           type="text"
           id="email"
           placeholder="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+              setError();
+              setEmail(e.target.value)
+          }}
         />
-        <input
+        <TextField
           type="password"
           id="password"
           placeholder="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+              setError();
+              setPassword(e.target.value)
+          }}
         />
-        <button className="myButton">
+        <Button onClick={LogIn} className="myButton">
             LOG IN
-          </button>
-      </form>
+          </Button>
+
+        {error &&
+            <span style={{position: "absolute", bottom: 0, color: 'red'}}>{error}</span>
+        }
+        </div>
     </div>
   );
 };

@@ -9,8 +9,11 @@ import LogOut from "./pages/LogOut";
 import LogIn from "./pages/LogIn";
 import Moja from "./pages/Moja";
 import Card  from "./pages/Card";
-
+import DrawerFP from "./components/DrawerFP";
+import AuthContext from "./contexts/auth/AuthContext";
 function App() {
+    const {getToken} = AuthContext();
+
   const fetchData = () => {
     fetch("http://localhost:9000/tipovi")
       .then((res) => res.json())
@@ -26,53 +29,64 @@ function App() {
   //   fetchData();
   // }
 
-  return (
-    <Router>
-      <div>
-        <Menu />
-        {/* <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/about">About</Link>
-            </li>
-            <li>
-              <Link to="/users">Users</Link>
-            </li>
-          </ul>
-        </nav> */}
-
-        <Switch>
-        <Route path="/moja">
-            <Moja />
-          </Route>
-          <Route path="/createtype">
-            <CreateType />
-          </Route>
-          <Route path="/createreport">
-            <CreateReport />
-          </Route>
-          <Route path="/logout">
-            <LogOut />
-          </Route>
-          <Route path="/login">
-            <LogIn />
-          </Route>
-          {/* <Route path="/card">
-  {loggedIn ? <Redirect to="/dashboard" /> : <PublicHomePage />}
-</Route> */}
-          <Route path="/card">
-            <Card />
-          </Route>
-          <Route path="/">
-            <Home />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
+  return(
+          getToken ?
+              <DrawerFP>
+                  <Route exact path="/home" component={Home} />
+                  <Route exact path="/reports" component={CreateReport} />
+                  <Route exact path="/types" component={CreateType} />
+              </DrawerFP>
+              :
+              <LogIn/>
   );
+
+//   return (
+//     <Router>
+//       <div>
+//         <Menu />
+//         {/* <nav>
+//           <ul>
+//             <li>
+//               <Link to="/">Home</Link>
+//             </li>
+//             <li>
+//               <Link to="/about">About</Link>
+//             </li>
+//             <li>
+//               <Link to="/users">Users</Link>
+//             </li>
+//           </ul>
+//         </nav> */}
+//
+//         <Switch>
+//         <Route path="/moja">
+//             <Moja />
+//           </Route>
+//           <Route path="/createtype">
+//             <CreateType />
+//           </Route>
+//           <Route path="/createreport">
+//             <CreateReport />
+//           </Route>
+//           <Route path="/logout">
+//             <LogOut />
+//           </Route>
+//           <Route path="/login">
+//             <LogIn />
+//           </Route>
+//           {/* <Route path="/card">
+//   {loggedIn ? <Redirect to="/dashboard" /> : <PublicHomePage />}
+// </Route> */}
+//           <Route path="/card">
+//             <Card />
+//           </Route>
+//           <Route path="/">
+//             <Home />
+//           </Route>
+//         </Switch>
+//       </div>
+//     </Router>
+//   );
 }
 
 export default App;
