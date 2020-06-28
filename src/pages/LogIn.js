@@ -3,6 +3,7 @@ import { Button, TextField } from "@material-ui/core";
 import "./style/LogIn.css";
 import AuthContext from "../contexts/auth/AuthContext";
 import {Redirect} from "react-router-dom";
+import toast from '../utils/toast'
 
 const LogIn = () => {
     const {getToken, setToken} = AuthContext();
@@ -26,8 +27,9 @@ const LogIn = () => {
           .then(res => res.json())
           .then(res => {
               if(res && res.err){
-                  setError(res.err);
+                  toast.error("Neuspešno")
               }else{
+                  toast.success("Uspešno ulogovani")
                   setRedirect(`/reports`)
                   setToken(res.token);
               }

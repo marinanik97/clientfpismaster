@@ -17,6 +17,9 @@ import {refromatDate, formatDate} from "../utils/utlis.js";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {Button} from "@material-ui/core";
+import DateFnsUtils from "@date-io/date-fns";
+import {KeyboardDatePicker, MuiPickersUtilsProvider} from "@material-ui/pickers";
+import toast from "../utils/toast";
 
 const CreateReport = () => {
     const [age, setAge] = React.useState("");
@@ -27,6 +30,7 @@ const CreateReport = () => {
     const [getKarton, setKarton] = useState();
     const [parametar, setParametar] = useState();
     const [doktor, setDoktor] = useState();
+    const [error, setError] = useState();
 
     const location = useLocation();
 
@@ -118,7 +122,10 @@ const CreateReport = () => {
 
     const sendIzvestaj = async (event) => {
         event.preventDefault();
-
+        if(!doktor){
+            setError(true)
+            return;
+        }
 
         let newArray = dummyReports.map((report) => {
             let {indikator, rezultatparametra} = report
@@ -131,9 +138,11 @@ const CreateReport = () => {
                 status: "dodavanje"
             }
         })
+
+        console.log(datumst, "DATUM STAVKE")
         const rezObj = {
             kartonid: getKarton.kartonid,
-            datumst: formatDate(datumst),
+            datumstampanja: formatDate(datumst),
             napomena: napomena,
             doktorid: doktor.doktorid,
             stavke: newArray
@@ -153,18 +162,24 @@ const CreateReport = () => {
                 }
                 if (res.ok) {
                     console.log(res);
+                    toast.success("Rezultat je sačuvan");
                     console.log("SUCCESS");
                 } else {
                     console.log(res);
                 }
             })
             .catch((e) => {
+                toast.error("Greška")
                 console.log(e);
             });
     };
 
     const updateDummyReports = (e) => {
         e.preventDefault();
+        if(!rezultatparametra || !indikator || !doktor || !parametar){
+            setError(true)
+            return;
+        }
         console.log(
             {
                 rf: parametar.referentnevrednosti,
@@ -186,19 +201,17 @@ const CreateReport = () => {
         ]);
     };
     const changeParam = (e) => {
-        console.log((parametri.find((param) => param.parametarid == e.target.value)));
+        setError(false)
         setParametar(parametri.find((param) => param.parametarid == e.target.value));
-        console.log(e.target.value);
     }
     const changeDoktor = (e) => {
-        console.log((doktori.find((doktor) => doktor.doktorid == e.target.value)));
+        setError(false)
         setDoktor(doktori.find((doktor) => doktor.doktorid == e.target.value));
-        console.log(e.target.value);
     }
-    console.log(dummyReports);
 
     return (
         <Fragment>
+            <div style={{marginBottom: "50px", padding: "50px"}}>
             <Grid container spacing={3}>
                 <Grid container
                       direction="row"
@@ -254,50 +267,105 @@ const CreateReport = () => {
                       justify="space-between"
                       alignItems="center"
                       spacing={1}>
-                    <Grid item md={4} xl={4} lg={4} xs={4}>
-                        <label className="col-form-label">Doktor:</label>
+                    <Grid item md={3} xl={3} lg={3} xs={3}>
+                        <FormControl>
+                            <InputLabel id="demo-simple-select-helper-label">Doktor</InputLabel>
                         <Select
+                            error={error}
                             onChange={changeDoktor}
                         >
                             {renderDoktori()}
                         </Select>
+                        </FormControl>
                     </Grid>
-                    <Grid item md={4} xl={4} lg={4} xs={4}>
+                    <Grid item md={3} xl={3} lg={3} xs={3}>
+                        <FormControl>
+                            <InputLabel id="demo-simple-select-helper-label">Parametri</InputLabel>
+                            <Select
+                                error={error}
+                                onChange={changeParam}
+                            >
+                                {renderParametri()}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item md={3} xl={3} lg={3} xs={3}>
                         <TextField
+                            error={error}
                             label={"Napomena"}
                             type="text"
                             className="form-control"
                             id="napomena"
                             placeholder="napomena"
-                            onChange={(e) => setNapomena(e.target.value)}
+                            onChange={(e) => {
+                                setError(false)
+                                setNapomena(e.target.value)
+                            }}
                         />
                     </Grid>
-                    <Grid item md={4} xl={4} lg={4} xs={4}>
-                        <label className="col-form-label">Datum:</label>
-                        <DatePicker
-                            className="form-control"
-                            selected={datumst}
-                            onChange={(datumst) => setDatumSt(datumst)}
-                            dateFormat="yyyy-MM-dd"
+                    <Grid item md={3} xl={3} lg={3} xs={3}>
+                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                        <KeyboardDatePicker
+                            error={error}
+                            value={datumst}
+                            onChange={(datumst) => {
+                                setError(false)
+                                setDatumSt(datumst)
+                            }}
+
                         />
+                    </MuiPickersUtilsProvider>
+                    </Grid>
+                    <Grid container>
+                        <Grid item md={3} xl={3} lg={3} xs={3}>
+                            <TextField
+                                error={error}
+                                label={"Rezultat"}
+                                type="text"
+                                className="form-control"
+                                id="kartonid"
+                                value={rezultatparametra}
+                                onChange={(e) => {
+                                    setError(false)
+                                    setRezP(e.target.value)
+                                }}
+                            />
+                        </Grid>
+                        <Grid item md={3} xl={3} lg={3} xs={3}>
+                            <TextField
+                                error={error}
+                                label={"Indikator"}
+                                type="text"
+                                className="form-control"
+                                id="kartonid"
+                                value={indikator}
+                                onChange={(e) => {
+                                    setError(false)
+                                    setIndikator(e.target.value)
+                                }}
+                            />
+                        </Grid>
                     </Grid>
                 </Grid>
+                <div className="action_container">
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className="myButton" onClick={updateDummyReports}>
+                        Dodaj
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className="myButton" onClick={sendIzvestaj}>
+                        Sačuvaj
+                    </Button>
+                </div>
 
-
-                <Button
-                    variant="contained"
-                    color="primary"
-                    className="myButton" onClick={updateDummyReports}>
-                    Dodaj
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    className="myButton" onClick={sendIzvestaj}>
-                    Sačuvaj
-                </Button>
             </Grid>
+            </div>
             <MaterialTable
+                title={"Stavke izveštaja"}
                 columns={columns}
                 data={dummyReports}
                 options={{
@@ -305,7 +373,6 @@ const CreateReport = () => {
                 }}
                 editable={{
                     isDeletable: (rowData) => true,
-
                     onRowDelete: (oldData) =>
                         new Promise((resolve, reject) => {
                             setTimeout(() => {

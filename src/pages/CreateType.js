@@ -26,12 +26,18 @@ const CreateType = () => {
   const [datumupisa, setDatumupisa] = useState(new Date());
   const [rezultatBrisanje, setRezultatBrisanje] = useState([]);
   const [getUzorak, setUzorak] = useState();
+  const [error, setError] = useState();
+
 
   const sendRez =  (event) => {
   event.preventDefault();
 
     const uzorak = tipovi.find((tip) => tip.uzorakid == getUzorak);
 
+    if(!posiljalac || !datumupisa || !uzorak){
+      setError(true);
+      return;
+    }
     const rezObj = {
       posiljalac: posiljalac,
       datumupisa: formatDate(datumupisa),
@@ -62,10 +68,9 @@ const CreateType = () => {
   };
 
   const [columns, setColumns] = useState([
-    { title: "RezultatID", field: "rezultatid" },
+    { title: "RezultatID", field: "rezultatid", editable: 'never' },
     { title: "Posiljalac", field: "posiljalac" },
-    { title: "Datum upisa", field: "datumupisa" },
-    { title: "UzorakID", field: "uzorakid" },
+    { title: "Datum upisa", field: "datumupisa", editable: 'never' },
   ]);
 
   const getTipovi = () => {
@@ -90,7 +95,8 @@ const CreateType = () => {
   const deleteRezultat = (rezultatid, callback) =>{
     fetch("http://localhost:9000/brisanjerezultata/" + rezultatid)
         .then(() => callback())
-        .catch((err) => console.error(err));
+        .then(() => toast.success("Uspešno obrisano"))
+        .catch((err) => toast.error("Greška"));
   }
   const updateRezultat = (rezultatid, newData, callback) =>{
     fetch("http://localhost:9000/izmenarezultata/" + rezultatid, {
@@ -105,11 +111,14 @@ const CreateType = () => {
             return res.json();
           }
           if (res.ok) {
+            toast.success("Uspešno promenjeno")
             getRezultati();
           } else {
+          toast.error("Greška");
           }
         })
         .catch((e) => {
+          toast.error("Greška");
         });
   }
   const renderTipovi = () => {
@@ -128,6 +137,7 @@ const CreateType = () => {
   };
 
   const changeUzorak = (e) =>{
+    setError(false)
     setUzorak(e.target.value);
   }
 
@@ -137,25 +147,33 @@ const CreateType = () => {
       <form className="form-create-type">
         <div className="div-form">
           <TextField
+              error={error}
               label={"Pošiljalac"}
             type="text"
             value={posiljalac}
-            onChange={(e) => setPosiljalac(e.target.value)}
+            onChange={(e) => {
+              setError(false)
+              setPosiljalac(e.target.value)
+            }}
           />
           {/* <label>Ime i prezime pacijenta: </label> */}
           <FormControl>
             <InputLabel id="demo-simple-select-helper-label">Ime i prezime</InputLabel>
-          <Select
-                  labelId="demo-simple-select-label"
+          <Select              error={error}
+                               labelId="demo-simple-select-label"
                   id="demo-simple-select"
                   onChange={changeUzorak}
           >{renderTipovi()}</Select>
           {/* <label>Datum upisa:</label> */}
           </FormControl>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          <KeyboardDatePicker
-              value={datumupisa}
-            onChange={(datumupisa) => setDatumupisa(datumupisa)}
+          <KeyboardDatePicker              error={error}
+
+                                           value={datumupisa}
+            onChange={(datumupisa) => {
+              setError(false)
+              setDatumupisa(datumupisa)
+            }}
 
           />
           </MuiPickersUtilsProvider>
@@ -173,11 +191,9 @@ const CreateType = () => {
         </div>
       </form>
       <MaterialTable
+          title={"Rezultati"}
         columns={columns}
         data={rezultati}
-        options={{
-          selection: true,
-        }}
         editable={{
           onRowUpdate: (newData, oldData) =>
               new Promise((resolve, reject) => {

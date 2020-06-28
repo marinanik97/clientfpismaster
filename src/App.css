@@ -8,3 +8,7 @@ label + .MuiInput-formControl {
   width: 260px !important;
 
 }
+
+.MuiTableHead-root .MuiTableCell-root:nth-child(1) span{
+  display: none;
+}

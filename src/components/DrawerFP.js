@@ -25,8 +25,8 @@ const useStyles = makeStyles((theme) => ({
         display: 'flex',
     },
     appBar: {
-        width: `calc(100% - ${drawerWidth}px)`,
-        marginLeft: drawerWidth,
+        width: `100%`,
+        zIndex: "10000"
     },
     drawer: {
         width: drawerWidth,
@@ -70,7 +70,7 @@ export default function PermanentDrawerLeft(props) {
             <AppBar position="fixed" className={classes.appBar}>
                 <Toolbar>
                     <Typography variant="h6" noWrap>
-                        Menu
+                        Informacioni sistem bolnice
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -84,7 +84,7 @@ export default function PermanentDrawerLeft(props) {
             >
                 <div className={classes.toolbar} />
                 <List>
-                    {[{name: 'Izveštaji', link: '/reports'}, {name: 'Rezultat', link: '/types'},{name: 'Kartoni', link: '/card'}].map((link, index) => (
+                    {[{name: 'Izveštaji', link: '/reports'}, {name: 'Rezultati', link: '/types'},{name: 'Kartoni', link: '/card'}].map((link, index) => (
                         <MenuItem link={link} key={link.name}/>
                     ))}
                 </List>
