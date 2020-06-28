@@ -3,6 +3,7 @@ import "./style/CreateType.css";
 import {Redirect, useLocation} from "react-router-dom";
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import {FormControl, InputLabel, Button} from "@material-ui/core";
 
 
 
@@ -49,8 +50,7 @@ const Card = (navigation) => {
 
   const submit = (e) =>{
     e.preventDefault();
-    console.log(e);
-    setRedirect(`/reports`);
+    setRedirect(`/report`);
   }
 
   const test = (event)=>{
@@ -61,14 +61,22 @@ const Card = (navigation) => {
   return (
     <div>
       <form className="form-create-type">
-        <div className="div-form">
+        <div className="div-form1">
+          <FormControl>
+            <InputLabel id="demo-simple-select-helper-label">Ime i prezime</InputLabel>
           <Select
            onChange={test}
            placeholder="Pick"
              >
             {renderCards()}
           </Select>
-          <button onClick={submit} className="myButton">Dalje</button>
+          </FormControl>
+          <Button
+              onClick={submit}
+              className="myButton"
+              variant="contained"
+              color="primary"
+          >Dalje</Button>
         </div>
       </form>
       

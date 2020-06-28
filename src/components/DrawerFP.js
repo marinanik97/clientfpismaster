@@ -14,6 +14,8 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 import { Link } from "react-router-dom";
 import Badge from "@material-ui/core/Badge";
+import Button from "@material-ui/core/Button"
+import AuthContext from "../contexts/auth/AuthContext";
 
 
 const drawerWidth = 240;
@@ -44,6 +46,11 @@ const useStyles = makeStyles((theme) => ({
 
 export default function PermanentDrawerLeft(props) {
     const classes = useStyles();
+    const {getToken, setToken} = AuthContext();
+
+    const LogOut = () =>{
+        setToken(false)
+    }
 
     const MenuItem = ({ link: { link, name } }) => {
         console.log(link);
@@ -76,13 +83,19 @@ export default function PermanentDrawerLeft(props) {
                 anchor="left"
             >
                 <div className={classes.toolbar} />
-                <Divider />
                 <List>
-                    {[{name: 'Home', link: '/home'}, {name: 'Izveštaji', link: '/reports'}, {name: 'Rezultat', link: '/types'},{name: 'Kartoni', link: '/card'}].map((link, index) => (
+                    {[{name: 'Izveštaji', link: '/reports'}, {name: 'Rezultat', link: '/types'},{name: 'Kartoni', link: '/card'}].map((link, index) => (
                         <MenuItem link={link} key={link.name}/>
                     ))}
                 </List>
-                <Divider />
+                <div style={{width: '100%', textAlign: 'center'}}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    style={{width: 120}}
+                    onClick={LogOut}
+                >Log out </Button>
+                </div>
             </Drawer>
             <main className={classes.content}>
                 <div className={classes.toolbar} />

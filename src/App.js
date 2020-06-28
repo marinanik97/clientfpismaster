@@ -11,6 +11,7 @@ import Moja from "./pages/Moja";
 import Card  from "./pages/Card";
 import DrawerFP from "./components/DrawerFP";
 import AuthContext from "./contexts/auth/AuthContext";
+import ReportList from "./pages/ReportList";
 function App() {
     const {getToken} = AuthContext();
 
@@ -32,10 +33,11 @@ function App() {
   return(
           getToken ?
               <DrawerFP>
-                  <Route exact path="/home" component={Home} />
-                  <Route exact path="/reports" component={CreateReport} />
+                  <Route exact path="/reports" component={ReportList} />
+                  <Route exact path="/report" component={CreateReport} />
                   <Route exact path="/types" component={CreateType} />
                   <Route exact path="/card" component={Card} />
+
               </DrawerFP>
               :
               <LogIn/>

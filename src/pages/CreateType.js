@@ -3,7 +3,19 @@ import "./style/CreateType.css";
 import MaterialTable from "material-table";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button } from "@material-ui/core";
+import { Button, TextField, Select, MenuItem, FormControl, InputLabel } from "@material-ui/core";
+import {
+  MuiPickersUtilsProvider,
+  KeyboardTimePicker,
+  KeyboardDatePicker,
+} from '@material-ui/pickers';
+import 'date-fns';
+import DateFnsUtils from '@date-io/date-fns';
+import {formatDate} from '../utils/utlis';
+import toast from '../utils/toast'
+
+
+
 
 const CreateType = () => {
   const [posiljalac, setPosiljalac] = useState("");
@@ -13,15 +25,20 @@ const CreateType = () => {
   const [rezultati, setRezultati] = React.useState([]);
   const [datumupisa, setDatumupisa] = useState(new Date());
   const [rezultatBrisanje, setRezultatBrisanje] = useState([]);
+  const [getUzorak, setUzorak] = useState();
 
-  const sendRez = async () => {
-    var e = document.getElementById("uz");
-    var uzorakid = e.options[e.selectedIndex].value;
+  const sendRez =  (event) => {
+  event.preventDefault();
+
+    const uzorak = tipovi.find((tip) => tip.uzorakid == getUzorak);
+
     const rezObj = {
       posiljalac: posiljalac,
-      datumupisa: datumupisa,
-      uzorakid: uzorakid,
+      datumupisa: formatDate(datumupisa),
+      uzorakid: uzorak.uzorakid,
     };
+
+
     fetch("http://localhost:9000/addrezultat", {
       method: "POST",
       headers: {
@@ -29,19 +46,18 @@ const CreateType = () => {
       },
       body: JSON.stringify(rezObj),
     })
-      .then(async (res) => {
+      .then( (res) => {
         if (res.status == 400) {
+
           return res.json();
         }
         if (res.ok) {
-          console.log(res);
-          console.log("SUCCESS");
+          getRezultati();
+          toast.success("Rezultat je sačuvan");
         } else {
-          console.log(res);
         }
       })
       .catch((e) => {
-        console.log(e);
       });
   };
 
@@ -66,64 +82,93 @@ const CreateType = () => {
       .catch((err) => console.error(err));
   };
 
-  const onRowAdd = () => {
-    console.log("add");
-  };
-  const onRowUpdate = () => {
-    console.log("up");
-  };
-  const onRowDelete = () => {
-    console.log("del");
-  };
   useEffect(() => {
     getTipovi();
     getRezultati();
   }, []);
 
+  const deleteRezultat = (rezultatid, callback) =>{
+    fetch("http://localhost:9000/brisanjerezultata/" + rezultatid)
+        .then(() => callback())
+        .catch((err) => console.error(err));
+  }
+  const updateRezultat = (rezultatid, newData, callback) =>{
+    fetch("http://localhost:9000/izmenarezultata/" + rezultatid, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newData),
+    })
+        .then(async (res) => {
+          if (res.status == 400) {
+            return res.json();
+          }
+          if (res.ok) {
+            getRezultati();
+          } else {
+          }
+        })
+        .catch((e) => {
+        });
+  }
   const renderTipovi = () => {
     if (tipovi) {
-      console.log(tipovi);
       return tipovi.map((tip, index) => {
         return (
-          <option key={index + "|"} value={tip.uzorakid}>
+          <MenuItem key={index + "|"} value={tip.uzorakid}>
             {tip.ime + " " + tip.prezime}
-          </option>
+          </MenuItem>
         );
 
-        // return <MenuItem key={index + "|"} value={tip.naziv} >{tip.naziv}</MenuItem>
       });
     } else {
       return <option>test</option>;
     }
   };
+
+  const changeUzorak = (e) =>{
+    setUzorak(e.target.value);
+  }
+
+
   return (
     <div>
       <form className="form-create-type">
         <div className="div-form">
-          <input
+          <TextField
+              label={"Pošiljalac"}
             type="text"
-            id="posiljalac"
             value={posiljalac}
             onChange={(e) => setPosiljalac(e.target.value)}
           />
           {/* <label>Ime i prezime pacijenta: </label> */}
-          <select id="uz">{renderTipovi()}</select>
+          <FormControl>
+            <InputLabel id="demo-simple-select-helper-label">Ime i prezime</InputLabel>
+          <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  onChange={changeUzorak}
+          >{renderTipovi()}</Select>
           {/* <label>Datum upisa:</label> */}
-          <DatePicker
-            selected={datumupisa}
+          </FormControl>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <KeyboardDatePicker
+              value={datumupisa}
             onChange={(datumupisa) => setDatumupisa(datumupisa)}
-            dateFormat="yyyy-MM-dd"
+
           />
+          </MuiPickersUtilsProvider>
           {/* <DatePicker selected={startDate} onChange={date => setStartDate(date)} setOpen={true}/> */}
           <div className="buttonsEdit">
-            <button
+            <Button
+                variant="contained"
+                color="primary"
               className="myButton"
-              onClick={() => sendRez({ posiljalac, datumupisa, uzorakid })}
+              onClick={(event) => sendRez(event,{ posiljalac, datumupisa, uzorakid })}
             >
               Dodaj
-            </button>
-            <button className="myButton">Izmeni</button>
-            <button className="myButton">Obriši</button>
+            </Button>
           </div>
         </div>
       </form>
@@ -133,14 +178,25 @@ const CreateType = () => {
         options={{
           selection: true,
         }}
-        onRowSelected={(event, rowData) => console.log(rowData)}
         editable={{
-          isEditable: (rowData) => true,
-          isDeletable: (rowData) => true,
-          onRowAdd: onRowAdd,
-          onRowUpdate: onRowUpdate,
-          onRowDelete: onRowDelete,
-        }}
+          onRowUpdate: (newData, oldData) =>
+              new Promise((resolve, reject) => {
+                setTimeout(() => {
+                  updateRezultat(oldData.rezultatid,newData);
+                  resolve();
+                }, 1000);
+              }),
+          onRowDelete: (oldData) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                deleteRezultat(oldData.rezultatid, () =>{
+                  getRezultati()
+                  resolve();
+
+                })
+
+              }, 1000);
+            })}}}
       />
     </div>
   );

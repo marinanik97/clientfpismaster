@@ -28,7 +28,7 @@ const LogIn = () => {
               if(res && res.err){
                   setError(res.err);
               }else{
-                  setRedirect(`/home`)
+                  setRedirect(`/reports`)
                   setToken(res.token);
               }
           })

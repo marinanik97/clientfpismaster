@@ -10,7 +10,7 @@ import Select from "@material-ui/core/Select";
 import Grid from "@material-ui/core/Grid";
 import MaterialTable from "material-table";
 import {useLocation} from "react-router-dom";
-import refromatDate from "../utils/utlis.js";
+import {refromatDate, formatDate} from "../utils/utlis.js";
 
 
 import DatePicker from "react-datepicker";
@@ -85,8 +85,8 @@ const CreateReport = () => {
     }
   };
   const renderParametri = () => {
+    console.log(parametri, "test")
     if (parametri) {
-      console.log(parametri);
       return parametri.map((parametar, index) => {
         return (
           <MenuItem key={index + "|"} value={parametar.parametarid}>
@@ -112,7 +112,7 @@ const CreateReport = () => {
     { title: "Rezultat", field: "rezultatparametra" },
     { title: "Indikator", field: "indikator" },
     { title: "Ref vrednosti", field: "rf" },
-    { title: "Jedinica", field: "jd" },
+
     
   ]);
 
@@ -125,7 +125,7 @@ const CreateReport = () => {
       return {
         indikator,
         rezultatparametra,
-        parametar,
+        parametarid: parametar.parametarid,
         izvestajid:2,
         kartonid: getKarton.kartonid,
         status: "dodavanje"
@@ -133,7 +133,7 @@ const CreateReport = () => {
     })
       const rezObj = {
         kartonid: getKarton.kartonid,
-        datumst: datumst,
+        datumst: formatDate(datumst),
         napomena: napomena,
         doktorid: doktor.doktorid,
         stavke: newArray
@@ -202,8 +202,8 @@ const CreateReport = () => {
       <form className="form-create-report">
         <div className="div-form-report2 form-row">
           <div className="form-group col-md-3">
-            <label className="col-form-label">Ime i prezime:</label>
-            <input
+            <TextField
+                label={"Ime i prezime"}
               type="text"
               className="form-control"
               id="imeprezime"
@@ -212,9 +212,9 @@ const CreateReport = () => {
             />
           </div>
           <div className="form-group col-md-3">
-            <label className="col-form-label">Datum rodjenja:</label>
-            <input
-              type="text"
+            <TextField
+                label={"Datum rodjenja"}
+                type="text"
               className="form-control"
               id="datumRodjenja"
               placeholder="datumRodjenja"
@@ -223,9 +223,9 @@ const CreateReport = () => {
             />
           </div>
           <div className="form-group col-md-3">
-            <label className="col-form-label">Pol:</label>
-            <input
-              type="text"
+            <TextField
+                label={"Pol"}
+                type="text"
               className="form-control"
               id="pol"
               placeholder="pol"
@@ -235,8 +235,8 @@ const CreateReport = () => {
           </div>
           {/*OVO SKLONITI?? */}
           <div className="form-group col-md-3">
-            <label className="col-form-label">KartonID:</label>
-            <input
+            <TextField
+                label={"KartonID"}
               type="text"
               className="form-control"
               id="kartonid"
@@ -262,8 +262,8 @@ const CreateReport = () => {
             </Select>
           </div>
           <div className="form-group col-md-4">
-            <label className="col-form-label">Napomena:</label>
-            <input
+            <TextField
+                label={"Napomena"}
               type="text"
               className="form-control"
               id="napomena"
@@ -296,8 +296,8 @@ const CreateReport = () => {
             </Select>
           </div>
           <div className="form-group col-md-4">
-            <label className="col-form-label">Rezultat:</label>
-            <input
+            <TextField
+                label="Rezultat"
               type="text"
               className="form-control"
               id="rezultat"
@@ -306,8 +306,8 @@ const CreateReport = () => {
             />
           </div>
           <div className="form-group col-md-4">
-            <label className="col-form-label">Indikator:</label>
-            <input
+            <TextField
+                label={"Indikator"}
               type="text"
               className="form-control"
               id="indikator"
