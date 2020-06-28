@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from "react";
 import "./style/CreateType.css";
+import {Redirect, useLocation} from "react-router-dom";
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+
+
+
 
 const Card = (navigation) => {
   const [cards, setCards] = React.useState([]);
+  const [getRedirect, setRedirect] = useState();
+  const [getOption, setOption] = useState();
+  const location = useLocation();
 
  
 
@@ -17,14 +26,20 @@ const Card = (navigation) => {
     getCards();
   }, []);
 
+  if(getRedirect){
+    return <Redirect to={{
+      pathname: getRedirect,
+      state: { from: {kartonid: getOption} },
+    }}/>
+  }
+
   const renderCards = () => {
     if (cards) {
-      console.log(cards);
       return cards.map((card, index) => {
         return (
-          <option key={index + "|"} value={card.kartonid}>
+          <MenuItem  key={index + "|"} value={card.kartonid}>
             {card.ime + " " + card.prezime}
-          </option>
+          </MenuItem >
         );
       });
     } else {
@@ -32,16 +47,28 @@ const Card = (navigation) => {
     }
   };
 
+  const submit = (e) =>{
+    e.preventDefault();
+    console.log(e);
+    setRedirect(`/reports`);
+  }
+
+  const test = (event)=>{
+    setOption(event.target.value)
+ }
   console.log(cards);
 
   return (
     <div>
       <form className="form-create-type">
         <div className="div-form">
-          <select id="cars" name="cars">
+          <Select
+           onChange={test}
+           placeholder="Pick"
+             >
             {renderCards()}
-          </select>
-          <button className="myButton">Dalje</button>
+          </Select>
+          <button onClick={submit} className="myButton">Dalje</button>
         </div>
       </form>
       

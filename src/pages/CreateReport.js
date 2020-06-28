@@ -9,6 +9,9 @@ import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
 import Grid from "@material-ui/core/Grid";
 import MaterialTable from "material-table";
+import {useLocation} from "react-router-dom";
+import refromatDate from "../utils/utlis.js";
+
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -19,6 +22,11 @@ const CreateReport = () => {
   const [parametri, setParametri] = React.useState([]);
   const [datumst, setDatumSt] = useState(new Date());
   const [napomena, setNapomena] = React.useState("");
+  const [getKarton, setKarton] = useState();
+  const [parametar, setParametar] = useState();
+  const [doktor, setDoktor] = useState();
+
+  const location = useLocation();
 
   const handleChange = (event) => {
     setAge(event.target.value);
@@ -26,7 +34,22 @@ const CreateReport = () => {
   useEffect(() => {
     getDoktori();
     getParametri();
+    if(location && location.state && location.state.from && location.state.from.kartonid){
+      getKartonById(location.state.from.kartonid);
+    }
   }, []);
+
+  
+
+  const getKartonById = (id) =>{
+    fetch("http://localhost:9000/kartoni/" + id)
+    .then((response) => response.json())
+    .then((response) => {
+      setKarton(response[0])
+      console.log(response);
+    })
+    .catch((err) => console.error(err));
+  }
 
   const getDoktori = () => {
     fetch("http://localhost:9000/doktori")
@@ -38,18 +61,23 @@ const CreateReport = () => {
   const getParametri = () => {
     fetch("http://localhost:9000/parametri")
       .then((response) => response.json())
-      .then((response) => setParametri(response))
+      .then((response) => {
+        console.log(response, "params");
+        setParametri(response);
+      })
       .catch((err) => console.error(err));
   };
+
+  
 
   const renderDoktori = () => {
     if (doktori) {
       console.log(doktori);
       return doktori.map((doktor, index) => {
         return (
-          <option key={index + "|"} value={doktor.doktorid}>
+          <MenuItem key={index + "|"} value={doktor.doktorid}>
             {doktor.ime + " " + doktor.prezime}
-          </option>
+          </MenuItem>
         );
       });
     } else {
@@ -61,58 +89,54 @@ const CreateReport = () => {
       console.log(parametri);
       return parametri.map((parametar, index) => {
         return (
-          <option key={index + "|"} value={parametar.parametarid}>
+          <MenuItem key={index + "|"} value={parametar.parametarid}>
             {parametar.naziv}
-          </option>
+          </MenuItem>
         );
       });
     } else {
       return <option>test</option>;
     }
   };
-  const [paramid,setParamid]=useState(0);
+  const [parametarid,setParamid]=useState(0);
   const [naziv, setNaziv] = useState("");
-  const [rezp, setRezP] = useState("");
+  const [rezultatparametra, setRezP] = useState("");
   const [indikator, setIndikator] = useState("");
   const [rf, setRf] = useState("");
   const [jd, setJd] = useState("");
   const [dummyReports, setDummyReports] = useState([]);
   const [stavkeIzv, setStavkeIzv] = useState([]);
   const [columns, setColums] = useState([
-    {title: "ParametarID",field:"paramid"},
+    {title: "ParametarID",field:"parametarid"},
     { title: "Naziv", field: "naziv" },
-    { title: "Rezultat", field: "rezp" },
+    { title: "Rezultat", field: "rezultatparametra" },
     { title: "Indikator", field: "indikator" },
     { title: "Ref vrednosti", field: "rf" },
     { title: "Jedinica", field: "jd" },
     
   ]);
 
-  const sendIzvestaj = async () => {
-    var e = document.getElementById("dokt");
-    var doktorid = e.options[e.selectedIndex].value;
-    var p = document.getElementById("param");
-    var parametarid = e.options[e.selectedIndex].value;
-    for(i=0;i<dummyReports.length;i++){
-      stavkeIzvestaja:[
-        {
-          izvestajid: 2,
-          kartonid: 1,
-          rb: 1,
-          indikator: dummyReports[i].indikator,
-          rezultatparametra: dummyReports[i].rezp,
-          parametarid: dummyReports[i].paramid,
-          status: "dodavanje"
-        },
-      ]
-    };
+  const sendIzvestaj = async (event) => {
+    event.preventDefault();
+  
+        
+    let newArray = dummyReports.map((report) => {
+      let {indikator, rezultatparametra} = report
+      return {
+        indikator,
+        rezultatparametra,
+        parametar,
+        izvestajid:2,
+        kartonid: getKarton.kartonid,
+        status: "dodavanje"
+      }
+    })
       const rezObj = {
-        kartonid: 1,
+        kartonid: getKarton.kartonid,
         datumst: datumst,
         napomena: napomena,
-        doktorid: doktorid,
-        rezultatid: 3,
-        stavke: 
+        doktorid: doktor.doktorid,
+        stavke: newArray
       
     }
     
@@ -141,103 +165,87 @@ const CreateReport = () => {
 
   const updateDummyReports = (e) => {
     e.preventDefault();
-    var e = document.getElementById("param");
-    var nazivP = e.options[e.selectedIndex].text;
-    var paramid = e.options[e.selectedIndex].value;
-    var ref = e.options[e.selectedIndex].value;
-    var jed = e.options[e.selectedIndex].value;
+    console.log(
+      {
+        rf: parametar.referentnevrednosti,
+        naziv: parametar.naziv,
+        parametarid: parametar.parametarid,
+        rezultatparametra: rezultatparametra,
+        indikator: indikator,
+      }, "aslk;dasd;laskas;das"
+    )
     setDummyReports([
       ...dummyReports,
       {
-        paramid:paramid,
-        naziv: nazivP,
-        rezp: rezp,
+        rf: parametar.referentnevrednosti,
+        naziv: parametar.naziv,
+        parametarid: parametar.parametarid,
+        rezultatparametra: rezultatparametra,
         indikator: indikator,
-        rf: ref,
-        jd: jed,
       },
     ]);
   };
-  const onRowAdd = () => {
-    console.log("add");
-  };
-  const onRowUpdate = () => {
-    console.log("up");
-  };
-  const onRowDelete = () => {
-    console.log("del");
-  };
+  const changeParam = (e) => {
+    console.log((parametri.find((param) => param.parametarid == e.target.value)));
+    setParametar(parametri.find((param) => param.parametarid == e.target.value));
+    console.log(e.target.value);
+  }
+  const changeDoktor = (e) => {
+    console.log((doktori.find((doktor) => doktor.doktorid == e.target.value)));
+    setDoktor(doktori.find((doktor) => doktor.doktorid == e.target.value));
+    console.log(e.target.value);
+  }
   console.log(dummyReports);
 
   return (
     <div>
       <form className="form-create-report">
         <div className="div-form-report2 form-row">
-          <div className="form-group col-md-2">
+          <div className="form-group col-md-3">
             <label className="col-form-label">Ime i prezime:</label>
             <input
               type="text"
               className="form-control"
               id="imeprezime"
-              placeholder="imeprezime"
-              value="nesto"
+              value={getKarton ? getKarton.ime + " " + getKarton.prezime : "imeprezime"}
               disabled
             />
           </div>
-          <div className="form-group col-sm-2">
+          <div className="form-group col-md-3">
             <label className="col-form-label">Datum rodjenja:</label>
             <input
               type="text"
               className="form-control"
               id="datumRodjenja"
               placeholder="datumRodjenja"
-              value="nesto"
+              value={getKarton ? refromatDate(getKarton.datumRodjenja): "datum"}
               disabled
             />
           </div>
-          <div className="form-group col-sm-2">
+          <div className="form-group col-md-3">
             <label className="col-form-label">Pol:</label>
             <input
               type="text"
               className="form-control"
               id="pol"
               placeholder="pol"
-              value="nesto"
+              value={getKarton ? getKarton.pol: "pol"}
               disabled
             />
           </div>
           {/*OVO SKLONITI?? */}
-          <div className="form-group col-md-2">
+          <div className="form-group col-md-3">
             <label className="col-form-label">KartonID:</label>
             <input
               type="text"
               className="form-control"
               id="kartonid"
               placeholder="kartonid"
-              value="nesto"
+              value={getKarton ? getKarton.kartonid: "kid"}
               disabled
             />
           </div>
-          <div className="form-group col-md-2">
-            <label classsName="col-form-label">RezultatID:</label>
-            <input
-              type="text"
-              id="rezultatid"
-              placeholder="rezultatid"
-              className="form-control"
-              value="nesto"
-              disabled
-            />
-          </div>
-          <div className="form-group col-md-2">
-            <label className="col-form-label">Broj uzorka:</label>
-            <input
-              type="text"
-              id="brojuzorka"
-              placeholder="brojuzorka"
-              className="form-control"
-            />
-          </div>
+          
         </div>
 
         <div className="form-row div-form-report">
@@ -247,13 +255,11 @@ const CreateReport = () => {
           {/*doktor*/}
           <div className="form-group col-md-4">
             <label className="col-form-label">Doktor:</label>
-            <select
-              className="custom-select form-control"
-              id="dokt"
-              name="dokt"
+            <Select
+             onChange={changeDoktor}
             >
               {renderDoktori()}
-            </select>
+            </Select>
           </div>
           <div className="form-group col-md-4">
             <label className="col-form-label">Napomena:</label>
@@ -283,13 +289,11 @@ const CreateReport = () => {
         <div className="form-row div-form-report">
           <div className="form-group col-md-4">
             <label className="col-form-label">Parametar:</label>
-            <select
-              className="custom-select form-control"
-              id="param"
-              name="param"
+            <Select
+              onChange={changeParam}
             >
               {renderParametri()}
-            </select>
+            </Select>
           </div>
           <div className="form-group col-md-4">
             <label className="col-form-label">Rezultat:</label>
