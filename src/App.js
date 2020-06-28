@@ -35,6 +35,7 @@ function App() {
                   <Route exact path="/home" component={Home} />
                   <Route exact path="/reports" component={CreateReport} />
                   <Route exact path="/types" component={CreateType} />
+                  <Route exact path="/card" component={Card} />
               </DrawerFP>
               :
               <LogIn/>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./style/CreateReport.css";
 import TextField from "@material-ui/core/TextField";
 import { withStyles } from "@material-ui/core/styles";
@@ -10,109 +10,163 @@ import Select from "@material-ui/core/Select";
 import Grid from "@material-ui/core/Grid";
 import MaterialTable from "material-table";
 
-const styles = (theme) => ({
-  input: {
-    height: 40,
-    width: 200,
-    margin: "5px",
-  },
-  button: {
-    height: 40,
-  },
-  selectRoot: {
-    height: 40,
-    display: "table",
-    // display: "flex",
-    // justifyContent: "center",
-    // alignItems: "center",
-  },
-  select: {
-    height: 40,
-    paddingTop: 0,
-    paddingBottom: 0,
-    display: "table-cell",
-    verticalAlign: "middle",
-  },
-});
-const useStyles = makeStyles((theme) => ({
-  formControl: {
-    margin: theme.spacing(2),
-    minWidth: 120,
-    width: 200,
-    height: 40,
-  },
-  selectEmpty: {
-    marginTop: theme.spacing(2),
-  },
-}));
-const CreateReport = withStyles(styles)((props) => {
-  const { classes } = props;
-  const doktori = [
-    { imePrezime: "Mika Mikic", godine: 32 },
-    { imePrezime: "Miloje Milic", godine: 43 },
-    { imePrezime: "Ivana Ivic", godine: 51 },
-  ];
-  const dummyReport = [
-    {
-      rezultatid: 1,
-      brojuzorka: 1,
-      ime: "Milica Milic",
-      datum: "12-01-1996",
-      pol: "Z",
-      kartonid: "1",
-    },
-  ];
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-  const classesStyle = useStyles();
+const CreateReport = () => {
   const [age, setAge] = React.useState("");
+  const [doktori, setDoktori] = React.useState([]);
+  const [parametri, setParametri] = React.useState([]);
+  const [datumst, setDatumSt] = useState(new Date());
+  const [napomena, setNapomena] = React.useState("");
 
   const handleChange = (event) => {
     setAge(event.target.value);
   };
+  useEffect(() => {
+    getDoktori();
+    getParametri();
+  }, []);
 
+  const getDoktori = () => {
+    fetch("http://localhost:9000/doktori")
+      .then((response) => response.json())
+      .then((response) => setDoktori(response))
+      .catch((err) => console.error(err));
+  };
+
+  const getParametri = () => {
+    fetch("http://localhost:9000/parametri")
+      .then((response) => response.json())
+      .then((response) => setParametri(response))
+      .catch((err) => console.error(err));
+  };
+
+  const renderDoktori = () => {
+    if (doktori) {
+      console.log(doktori);
+      return doktori.map((doktor, index) => {
+        return (
+          <option key={index + "|"} value={doktor.doktorid}>
+            {doktor.ime + " " + doktor.prezime}
+          </option>
+        );
+      });
+    } else {
+      return <option>test</option>;
+    }
+  };
+  const renderParametri = () => {
+    if (parametri) {
+      console.log(parametri);
+      return parametri.map((parametar, index) => {
+        return (
+          <option key={index + "|"} value={parametar.parametarid}>
+            {parametar.naziv}
+          </option>
+        );
+      });
+    } else {
+      return <option>test</option>;
+    }
+  };
+  const [paramid,setParamid]=useState(0);
   const [naziv, setNaziv] = useState("");
-  const [rezultat, setRezultat] = useState("");
+  const [rezp, setRezP] = useState("");
   const [indikator, setIndikator] = useState("");
   const [rf, setRf] = useState("");
   const [jd, setJd] = useState("");
-  const [dummyReports, setDummyReports] = useState([
-    {
-      naziv: "Urin",
-      rezultat: "nalazUrina",
-      indikator: "nn",
-      rf: "12",
-      jd: "ml",
-    },
-    {
-      naziv: "Urin",
-      rezultat: "nalazUrina",
-      indikator: "nn",
-      rf: "12",
-      jd: "ml",
-    },
-  ]);
+  const [dummyReports, setDummyReports] = useState([]);
+  const [stavkeIzv, setStavkeIzv] = useState([]);
   const [columns, setColums] = useState([
+    {title: "ParametarID",field:"paramid"},
     { title: "Naziv", field: "naziv" },
-    { title: "Rezultat", field: "rezultat" },
+    { title: "Rezultat", field: "rezp" },
     { title: "Indikator", field: "indikator" },
     { title: "Ref vrednosti", field: "rf" },
     { title: "Jedinica", field: "jd" },
+    
   ]);
+
+  const sendIzvestaj = async () => {
+    var e = document.getElementById("dokt");
+    var doktorid = e.options[e.selectedIndex].value;
+    var p = document.getElementById("param");
+    var parametarid = e.options[e.selectedIndex].value;
+    for(i=0;i<dummyReports.length;i++){
+      stavkeIzvestaja:[
+        {
+          izvestajid: 2,
+          kartonid: 1,
+          rb: 1,
+          indikator: dummyReports[i].indikator,
+          rezultatparametra: dummyReports[i].rezp,
+          parametarid: dummyReports[i].paramid,
+          status: "dodavanje"
+        },
+      ]
+    };
+      const rezObj = {
+        kartonid: 1,
+        datumst: datumst,
+        napomena: napomena,
+        doktorid: doktorid,
+        rezultatid: 3,
+        stavke: 
+      
+    }
+    
+    fetch("http://localhost:9000/dodajizvestaj", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(rezObj),
+    })
+      .then(async (res) => {
+        if (res.status == 400) {
+          return res.json();
+        }
+        if (res.ok) {
+          console.log(res);
+          console.log("SUCCESS");
+        } else {
+          console.log(res);
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  };
 
   const updateDummyReports = (e) => {
     e.preventDefault();
+    var e = document.getElementById("param");
+    var nazivP = e.options[e.selectedIndex].text;
+    var paramid = e.options[e.selectedIndex].value;
+    var ref = e.options[e.selectedIndex].value;
+    var jed = e.options[e.selectedIndex].value;
     setDummyReports([
       ...dummyReports,
       {
-        naziv: naziv,
-        rezultat: rezultat,
+        paramid:paramid,
+        naziv: nazivP,
+        rezp: rezp,
         indikator: indikator,
-        rf: rf,
-        jd: jd,
+        rf: ref,
+        jd: jed,
       },
     ]);
   };
-
+  const onRowAdd = () => {
+    console.log("add");
+  };
+  const onRowUpdate = () => {
+    console.log("up");
+  };
+  const onRowDelete = () => {
+    console.log("del");
+  };
   console.log(dummyReports);
 
   return (
@@ -165,7 +219,6 @@ const CreateReport = withStyles(styles)((props) => {
             />
           </div>
           <div className="form-group col-md-2">
-            
             <label classsName="col-form-label">RezultatID:</label>
             <input
               type="text"
@@ -196,10 +249,10 @@ const CreateReport = withStyles(styles)((props) => {
             <label className="col-form-label">Doktor:</label>
             <select
               className="custom-select form-control"
-              id="cars"
-              name="cars"
+              id="dokt"
+              name="dokt"
             >
-              <option>test</option>
+              {renderDoktori()}
             </select>
           </div>
           <div className="form-group col-md-4">
@@ -209,15 +262,16 @@ const CreateReport = withStyles(styles)((props) => {
               className="form-control"
               id="napomena"
               placeholder="napomena"
+              onChange={(e) => setNapomena(e.target.value)}
             />
           </div>
           <div className="form-group col-md-4">
-            <label className="col-form-label">Datum stampanja:</label>
-            <input
-              type="text"
+            <label className="col-form-label">Datum:</label>
+            <DatePicker
               className="form-control"
-              id="datumstampanja"
-              placeholder="datumstampanja"
+              selected={datumst}
+              onChange={(datumst) => setDatumSt(datumst)}
+              dateFormat="yyyy-MM-dd"
             />
           </div>
         </div>
@@ -231,10 +285,10 @@ const CreateReport = withStyles(styles)((props) => {
             <label className="col-form-label">Parametar:</label>
             <select
               className="custom-select form-control"
-              id="cars"
-              name="cars"
+              id="param"
+              name="param"
             >
-              <option>test</option>
+              {renderParametri()}
             </select>
           </div>
           <div className="form-group col-md-4">
@@ -244,6 +298,7 @@ const CreateReport = withStyles(styles)((props) => {
               className="form-control"
               id="rezultat"
               placeholder="rezultat"
+              onChange={(e) => setRezP(e.target.value)}
             />
           </div>
           <div className="form-group col-md-4">
@@ -253,25 +308,43 @@ const CreateReport = withStyles(styles)((props) => {
               className="form-control"
               id="indikator"
               placeholder="indikator"
+              onChange={(e) => setIndikator(e.target.value)}
             />
           </div>
         </div>
-        <button className="myButton">Dodaj</button>
-        <button className="myButton">Obriši</button>
-        <button className="myButton">Sačuvaj</button>
+        <button className="myButton" onClick={updateDummyReports}>
+          Dodaj
+        </button>
+        <button className="myButton" onClick={sendIzvestaj}>
+          Sačuvaj
+        </button>
       </form>
       <div>
-      <MaterialTable
-        columns={columns}
-        data={dummyReports}
-        options={{
-          selection: true,
-        }}
-      />
-    </div>
+        <MaterialTable
+          columns={columns}
+          data={dummyReports}
+          options={{
+            selection: true,
+          }}
+          editable={{
+            isDeletable: (rowData) => true,
 
+            onRowDelete: (oldData) =>
+              new Promise((resolve, reject) => {
+                setTimeout(() => {
+                  const dataDelete = [...dummyReports];
+                  const index = oldData.tableData.id;
+                  dataDelete.splice(index, 1);
+                  setDummyReports([...dataDelete]);
+
+                  resolve();
+                }, 1000);
+              }),
+          }}
+        />
+      </div>
     </div>
   );
-});
+};
 
 export default CreateReport;

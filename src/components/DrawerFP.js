@@ -78,7 +78,7 @@ export default function PermanentDrawerLeft(props) {
                 <div className={classes.toolbar} />
                 <Divider />
                 <List>
-                    {[{name: 'Home', link: '/home'}, {name: 'Izveštaji', link: '/reports'}, {name: 'Rezultat', link: '/types'}].map((link, index) => (
+                    {[{name: 'Home', link: '/home'}, {name: 'Izveštaji', link: '/reports'}, {name: 'Rezultat', link: '/types'},{name: 'Kartoni', link: '/card'}].map((link, index) => (
                         <MenuItem link={link} key={link.name}/>
                     ))}
                 </List>
