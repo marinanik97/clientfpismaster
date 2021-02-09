@@ -81,6 +81,17 @@ const Menu = () => {
               Kreiranje izveštaja
             </NavLink>
           </li>
+            <li>
+                <NavLink
+                    to="/cardCreate"
+                    activeStyle={{
+                        fontWeight: "bold",
+                        color: "#008080",
+                    }}
+                >
+                    Kreiranje kartona
+                </NavLink>
+            </li>
         </ul>
       </nav>
     </header>

@@ -1,221 +1,210 @@
 import React, { useState, useEffect } from "react";
 import "./style/CreateType.css";
 import MaterialTable from "material-table";
+import { useQuery, useMutation } from "@apollo/client";
+import { getRezultats, getUzorci } from "../graphql/queries";
+import {
+  NewRezultatMutation,
+  DeleteRezultatMutation,
+  EditRezultatMutation,
+} from "../graphql/mutation";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, TextField, Select, MenuItem, FormControl, InputLabel } from "@material-ui/core";
+import {
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardTimePicker,
   KeyboardDatePicker,
-} from '@material-ui/pickers';
-import 'date-fns';
-import DateFnsUtils from '@date-io/date-fns';
-import {formatDate} from '../utils/utlis';
-import toast from '../utils/toast'
-
-
-
+} from "@material-ui/pickers";
+import "date-fns";
+import DateFnsUtils from "@date-io/date-fns";
+import { formatDate } from "../utils/utlis";
+import toast from "../utils/toast";
 
 const CreateType = () => {
-  const [posiljalac, setPosiljalac] = useState("");
-  const [uzorakid, setUzorakId] = useState(0);
-  const [rezultatid, setRezultatid] = useState(0);
-  const [tipovi, setTipovi] = React.useState([]);
+  const [uzorci, setUzorci] = React.useState([]);
   const [rezultati, setRezultati] = React.useState([]);
+  const [posiljalac, setPosiljalac] = useState("");
+  const { loading, error, data } = useQuery(getRezultats, {
+    onCompleted: setRezultati,
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
+  });
+  const { loading: loadingU, error: errorU, data: dataU } = useQuery(
+    getUzorci,
+    { onCompleted: setUzorci }
+  );
   const [datumupisa, setDatumupisa] = useState(new Date());
-  const [rezultatBrisanje, setRezultatBrisanje] = useState([]);
-  const [getUzorak, setUzorak] = useState();
-  const [error, setError] = useState();
-
-
-  const sendRez =  (event) => {
-  event.preventDefault();
-
-    const uzorak = tipovi.find((tip) => tip.uzorakid == getUzorak);
-
-    if(!posiljalac || !datumupisa || !uzorak){
-      setError(true);
-      return;
-    }
-    const rezObj = {
-      posiljalac: posiljalac,
-      datumupisa: formatDate(datumupisa),
-      uzorakid: uzorak.uzorakid,
-    };
-
-
-    fetch("http://localhost:9000/addrezultat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  const [uzorak, setUzorak] = useState();
+  const [err, setErr] = useState();
+  const [newResult, { loading: loadingRez, error: errorRez }] = useMutation(
+    NewRezultatMutation,
+    {
+      refetchQueries: [{ query: getRezultats }],
+      onCompleted: ({ newResult }) => {
+        toast.success("Rezultat je sačuvan");
       },
-      body: JSON.stringify(rezObj),
-    })
-      .then( (res) => {
-        if (res.status == 400) {
+    }
+  );
 
-          return res.json();
-        }
-        if (res.ok) {
-          getRezultati();
-          toast.success("Rezultat je sačuvan");
-        } else {
-        }
-      })
-      .catch((e) => {
-      });
-  };
+  const [
+    deleteResult,
+    { loading: loadingRezDel, error: errorRezDel },
+  ] = useMutation(DeleteRezultatMutation, {
+    refetchQueries: [{ query: getRezultats }],
+    onCompleted: ({ deleteResult }) => {
+      toast.success("Rezultat je obrisan");
+    },
+  });
+
+  const [
+    editResult,
+    { loading: loadingRezEdit, error: errorRezEdit },
+  ] = useMutation(EditRezultatMutation, {
+    onCompleted: ({ editResult }) => {
+      toast.success("Rezultat je izmenjen");
+    },
+  });
 
   const [columns, setColumns] = useState([
-    { title: "RezultatID", field: "rezultatid", editable: 'never' },
     { title: "Posiljalac", field: "posiljalac" },
-    { title: "Datum upisa", field: "datumupisa", editable: 'never' },
+    { title: "Datum upisa", field: "datumupisa" },
   ]);
 
-  const getTipovi = () => {
-    fetch("http://localhost:9000/uzorci")
-      .then((response) => response.json())
-      .then((response) => setTipovi(response))
-      .catch((err) => console.error(err));
-  };
-
-  const getRezultati = () => {
-    fetch("http://localhost:9000/rezultati")
-      .then((response) => response.json())
-      .then((response) => setRezultati(response))
-      .catch((err) => console.error(err));
-  };
-
-  useEffect(() => {
-    getTipovi();
-    getRezultati();
-  }, []);
-
-  const deleteRezultat = (rezultatid, callback) =>{
-    fetch("http://localhost:9000/brisanjerezultata/" + rezultatid)
-        .then(() => callback())
-        .then(() => toast.success("Uspešno obrisano"))
-        .catch((err) => toast.error("Greška"));
-  }
-  const updateRezultat = (rezultatid, newData, callback) =>{
-    fetch("http://localhost:9000/izmenarezultata/" + rezultatid, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newData),
-    })
-        .then(async (res) => {
-          if (res.status == 400) {
-            return res.json();
-          }
-          if (res.ok) {
-            toast.success("Uspešno promenjeno")
-            getRezultati();
-          } else {
-          toast.error("Greška");
-          }
-        })
-        .catch((e) => {
-          toast.error("Greška");
-        });
-  }
-  const renderTipovi = () => {
-    if (tipovi) {
-      return tipovi.map((tip, index) => {
+  const renderUzorci = () => {
+    if (uzorci.getUzoraks) {
+      console.log(uzorci.getUzoraks);
+      console.log(rezultati.getResults);
+      console.log(rezultati);
+      return uzorci.getUzoraks.map((uzorak, index) => {
         return (
-          <MenuItem key={index + "|"} value={tip.uzorakid}>
-            {tip.ime + " " + tip.prezime}
+          <MenuItem key={index + "|"} value={uzorak.id}>
+            {uzorak.karton.ime + " " + uzorak.karton.prezime}
           </MenuItem>
         );
-
       });
     } else {
       return <option>test</option>;
     }
   };
 
-  const changeUzorak = (e) =>{
-    setError(false)
+  const changeUzorak = (e) => {
+    setErr(false);
     setUzorak(e.target.value);
-  }
+    console.log(uzorak);
+  };
+  if (rezultati.length != 0) {
+    console.log(rezultati);
+    let i;
 
-
-  return (
-    <div>
-      <form className="form-create-type">
-        <div className="div-form">
-          <TextField
-              error={error}
+    var editableData = rezultati.getResults.map((o) => ({ ...o }));
+    for (i = 0; i < editableData.length; i++) {
+      let d = editableData[i].datumupisa.slice(0, 10);
+      editableData[i].datumupisa = d;
+      console.log(d);
+    }
+    return (
+      <div>
+        <form className="form-create-type">
+          <div className="div-form">
+            <TextField
+              // error={error}
               label={"Pošiljalac"}
-            type="text"
-            value={posiljalac}
-            onChange={(e) => {
-              setError(false)
-              setPosiljalac(e.target.value)
-            }}
-          />
-          {/* <label>Ime i prezime pacijenta: </label> */}
-          <FormControl>
-            <InputLabel id="demo-simple-select-helper-label">Ime i prezime</InputLabel>
-          <Select              error={error}
-                               labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  onChange={changeUzorak}
-          >{renderTipovi()}</Select>
-          {/* <label>Datum upisa:</label> */}
-          </FormControl>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          <KeyboardDatePicker              error={error}
-
-                                           value={datumupisa}
-            onChange={(datumupisa) => {
-              setError(false)
-              setDatumupisa(datumupisa)
-            }}
-
-          />
-          </MuiPickersUtilsProvider>
-          {/* <DatePicker selected={startDate} onChange={date => setStartDate(date)} setOpen={true}/> */}
-          <div className="buttonsEdit">
-            <Button
+              type="text"
+              value={posiljalac}
+              onChange={(e) => {
+                setErr(false);
+                setPosiljalac(e.target.value);
+              }}
+            />
+            {/* <label>Ime i prezime pacijenta: </label> */}
+            <FormControl>
+              <InputLabel id="demo-simple-select-helper-label">
+                Ime i prezime
+              </InputLabel>
+              <Select
+                error={error}
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                onChange={changeUzorak}
+              >
+                {renderUzorci()}
+              </Select>
+              {/* <label>Datum upisa:</label> */}
+            </FormControl>
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+              <KeyboardDatePicker
+                error={error}
+                value={datumupisa}
+                onChange={(datumupisa) => {
+                  setErr(false);
+                  setDatumupisa(datumupisa);
+                }}
+              />
+            </MuiPickersUtilsProvider>
+            {/* <DatePicker selected={startDate} onChange={date => setStartDate(date)} setOpen={true}/> */}
+            <div className="buttonsEdit">
+              <Button
                 variant="contained"
                 color="primary"
-              className="myButton"
-              onClick={(event) => sendRez(event,{ posiljalac, datumupisa, uzorakid })}
-            >
-              Dodaj
-            </Button>
+                className="myButton"
+                onClick={() =>
+                  newResult({
+                    variables: { input: { posiljalac, datumupisa, uzorak } },
+                  })
+                }
+              >
+                Dodaj
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
-      <MaterialTable
+        </form>
+        <MaterialTable
           title={"Rezultati"}
-        columns={columns}
-        data={rezultati}
-        editable={{
-          onRowUpdate: (newData, oldData) =>
+          columns={columns}
+          data={editableData}
+          editable={{
+            onRowUpdate: (newData, oldData) =>
               new Promise((resolve, reject) => {
+                const id = oldData.id;
+                const posiljalac = newData.posiljalac;
+                const datumupisa = newData.datumupisa;
+                const uzorak = newData.uzorak.id;
                 setTimeout(() => {
-                  updateRezultat(oldData.rezultatid,newData);
+                  editResult({
+                    variables: {
+                      input: { id, posiljalac, datumupisa, uzorak },
+                    },
+                  });
                   resolve();
                 }, 1000);
               }),
-          onRowDelete: (oldData) => {
-            return new Promise((resolve, reject) => {
-              setTimeout(() => {
-                deleteRezultat(oldData.rezultatid, () =>{
-                  getRezultati()
+            onRowDelete: (oldData) => {
+              return new Promise((resolve, reject) => {
+                const id = oldData.id;
+                console.log();
+                setTimeout(() => {
+                  deleteResult({
+                    variables: { id },
+                  });
                   resolve();
-
-                })
-
-              }, 1000);
-            })}}}
-      />
-    </div>
-  );
+                }, 1000);
+              });
+            },
+          }}
+        />
+      </div>
+    );
+  } else {
+    return null;
+  }
 };
 
 export default CreateType;

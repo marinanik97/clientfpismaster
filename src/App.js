@@ -7,11 +7,15 @@ import CreateType from "./pages/CreateType";
 import Home from "./pages/Home";
 import LogOut from "./pages/LogOut";
 import LogIn from "./pages/LogIn";
+import Proba from "./pages/Proba";
 import Moja from "./pages/Moja";
 import Card  from "./pages/Card";
 import DrawerFP from "./components/DrawerFP";
 import AuthContext from "./contexts/auth/AuthContext";
 import ReportList from "./pages/ReportList";
+import CreateMedicalRecord from "./pages/CreateMedicalRecord";
+import { ApolloProvider } from '@apollo/client';
+import client from './graphql/apollo'
 function App() {
     const {getToken} = AuthContext();
 
@@ -32,13 +36,17 @@ function App() {
 
   return(
           getToken ?
+          <ApolloProvider client={client}>
               <DrawerFP>
                   <Route exact path="/reports" component={ReportList} />
                   <Route exact path="/report" component={CreateReport} />
                   <Route exact path="/types" component={CreateType} />
                   <Route exact path="/card" component={Card} />
+                  <Route exact path="/cardCreate" component={CreateMedicalRecord} />
+                  <Route exact path="/proba" component={Proba} />
 
               </DrawerFP>
+          </ApolloProvider>
               :
               <LogIn/>
   );
